@@ -15,10 +15,11 @@ import (
 )
 
 const (
-	MAX_BUFFER   = 1024 // 读取缓存最大值
-	SIZE_OF_TYPE = 4    // sizeof int32
-	SIZE_OF_SIZE = 4    // sizeof int32
-	SIZE_OF_HEAD = SIZE_OF_TYPE + SIZE_OF_SIZE
+	MAX_BUFFER    = 1024 // 读取缓存最大值
+	SIZE_OF_TYPE  = 4    // sizeof int32
+	SIZE_OF_SIZE  = 4    // sizeof int32
+	SIZE_OF_HEAD  = SIZE_OF_TYPE + SIZE_OF_SIZE
+	SIZE_OF_PIECE = 512
 )
 
 const (
@@ -140,7 +141,23 @@ func SingleRequest(addr net.TCPAddr, b []byte) Msg {
 }
 
 func SingleWrite(conn *net.TCPConn, b []byte) []byte {
-	conn.Write(b)
+	// tmp := make([]byte, SIZE_OF_PIECE)
+	bLen := len(b)
+	for {
+		var tmp []byte
+		buf := bytes.NewBuffer(b)
+		if bLen < SIZE_OF_PIECE {
+			tmp = buf.Next(bLen)
+		} else {
+			tmp = buf.Next(SIZE_OF_PIECE)
+		}
+		conn.Write(tmp)
+		bLen -= SIZE_OF_PIECE
+		if bLen < 0 {
+			break
+		}
+	}
+
 	return b
 }
 
@@ -180,10 +197,20 @@ func SingleRead(conn *net.TCPConn) Msg {
 	}
 
 	b = make([]byte, size)
-	_, e := conn.Read(b)
-	if e != nil && e != io.EOF { // 网络有错,则退出循环
-		fmt.Printf("msg.SingleRead:%v", e)
-		return Msg{}
+	sum := 0
+	for {
+		tmp := make([]byte, SIZE_OF_PIECE)
+		i, e := conn.Read(tmp)
+		if e != nil && e != io.EOF { // 网络有错,则退出循环
+			fmt.Printf("msg.SingleRead:%v", e)
+			return Msg{}
+		}
+
+		copy(b[sum:sum+i], tmp)
+		sum += i
+		if sum >= size {
+			break
+		}
 	}
 	m.Content = b
 
