@@ -206,7 +206,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 			return Msg{}
 		}
 
-		copy(b[sum:sum+i], tmp)
+		copy(b[sum:sum+i-1], tmp)
 		sum += i
 		if sum >= size {
 			break
