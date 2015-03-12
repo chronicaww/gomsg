@@ -205,8 +205,11 @@ func SingleRead(conn *net.TCPConn) Msg {
 			fmt.Printf("msg.SingleRead:%v", e)
 			return Msg{}
 		}
-
-		copy(b[sum:sum+i-1], tmp[:i-1])
+		end := sum + i
+		if end > size {
+			end = size
+		}
+		copy(b[sum:end], tmp[:SIZE_OF_PIECE])
 		sum += i
 		if sum >= size {
 			break
