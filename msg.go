@@ -143,8 +143,8 @@ func SingleRequest(addr net.TCPAddr, b []byte) Msg {
 func SingleWrite(conn *net.TCPConn, b []byte) []byte {
 	// tmp := make([]byte, SIZE_OF_PIECE)
 	bLen := len(b)
+	fmt.Println("AA blen:", bLen)
 	for {
-		fmt.Println("A")
 		var tmp []byte
 		buf := bytes.NewBuffer(b)
 		if bLen < SIZE_OF_PIECE {
@@ -154,6 +154,7 @@ func SingleWrite(conn *net.TCPConn, b []byte) []byte {
 		}
 		conn.Write(tmp)
 		bLen -= SIZE_OF_PIECE
+		fmt.Println("A blen:", bLen)
 		if bLen < 0 {
 			break
 		}
@@ -201,7 +202,6 @@ func SingleRead(conn *net.TCPConn) Msg {
 	b = make([]byte, size)
 	sum := 0
 	for {
-		fmt.Println("B")
 		tmp := make([]byte, SIZE_OF_PIECE)
 		i, e := conn.Read(tmp)
 		if e != nil && e != io.EOF { // 网络有错,则退出循环
@@ -217,6 +217,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 		if sum >= size {
 			break
 		}
+		fmt.Println("B sum:", sum, "end:", end, "i:", i)
 		time.Sleep(50 * time.Microsecond)
 	}
 	m.Content = b
