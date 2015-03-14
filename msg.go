@@ -150,7 +150,7 @@ func SingleWrite(conn *net.TCPConn, b []byte) []byte {
 		}
 		conn.Write(tmp)
 		bLen -= SIZE_OF_PIECE
-		if bLen < 0 {
+		if bLen <= 0 {
 			break
 		}
 		time.Sleep(50 * time.Microsecond)
