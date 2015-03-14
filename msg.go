@@ -212,7 +212,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 		if end > size {
 			end = size
 		}
-		copy(b[sum:end], tmp)
+		copy(b[sum:end], tmp[:i])
 		sum += i
 		fmt.Println("B sum:", sum, "end:", end, "i:", i)
 		if sum >= size {
