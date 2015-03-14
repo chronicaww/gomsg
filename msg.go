@@ -214,10 +214,10 @@ func SingleRead(conn *net.TCPConn) Msg {
 		}
 		copy(b[sum:end], tmp)
 		sum += i
+		fmt.Println("B sum:", sum, "end:", end, "i:", i)
 		if sum >= size {
 			break
 		}
-		fmt.Println("B sum:", sum, "end:", end, "i:", i)
 		time.Sleep(50 * time.Microsecond)
 	}
 	m.Content = b
