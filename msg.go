@@ -157,6 +157,7 @@ func SingleWrite(conn *net.TCPConn, b []byte) []byte {
 		if bLen < 0 {
 			break
 		}
+		time.Sleep(50 * time.Microsecond)
 	}
 
 	return b
@@ -216,6 +217,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 		if sum >= size {
 			break
 		}
+		time.Sleep(50 * time.Microsecond)
 	}
 	m.Content = b
 	fmt.Println("C")
