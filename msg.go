@@ -5,13 +5,10 @@ import (
 	"bytes"           // bytes.NewBuffer
 	"encoding/binary" // binary.Read
 	"errors"          // errors.New
-
-	"io"  // io.EOF
-	"net" // TCP
-
-	"time" // time.Sleep
-
-	"fmt"
+	"fmt"             //
+	"io"              // io.EOF
+	"net"             // TCP
+	"time"            // time.Sleep
 )
 
 const (
@@ -19,7 +16,7 @@ const (
 	SIZE_OF_TYPE  = 4    // sizeof int32
 	SIZE_OF_SIZE  = 4    // sizeof int32
 	SIZE_OF_HEAD  = SIZE_OF_TYPE + SIZE_OF_SIZE
-	SIZE_OF_PIECE = 512
+	SIZE_OF_PIECE = 256
 )
 
 const (
@@ -143,18 +140,17 @@ func SingleRequest(addr net.TCPAddr, b []byte) Msg {
 func SingleWrite(conn *net.TCPConn, b []byte) []byte {
 	// tmp := make([]byte, SIZE_OF_PIECE)
 	bLen := len(b)
-	fmt.Println("AA blen:", bLen)
+	buf := bytes.NewBuffer(b)
 	for {
 		var tmp []byte
-		buf := bytes.NewBuffer(b)
 		if bLen < SIZE_OF_PIECE {
 			tmp = buf.Next(bLen)
 		} else {
 			tmp = buf.Next(SIZE_OF_PIECE)
 		}
+		fmt.Println(tmp)
 		conn.Write(tmp)
 		bLen -= SIZE_OF_PIECE
-		fmt.Println("A blen:", bLen)
 		if bLen < 0 {
 			break
 		}
@@ -213,15 +209,14 @@ func SingleRead(conn *net.TCPConn) Msg {
 			end = size
 		}
 		copy(b[sum:end], tmp[:i])
+		fmt.Println(tmp)
 		sum += i
-		fmt.Println("B sum:", sum, "end:", end, "i:", i)
 		if sum >= size {
 			break
 		}
 		time.Sleep(50 * time.Microsecond)
 	}
 	m.Content = b
-	fmt.Println("C")
 	return m
 }
 
