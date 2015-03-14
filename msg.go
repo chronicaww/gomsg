@@ -153,7 +153,7 @@ func SingleWrite(conn *net.TCPConn, b []byte) []byte {
 		}
 		conn.Write(tmp)
 		bLen -= SIZE_OF_PIECE
-		if bLen < 0 {
+		if bLen <= 0 {
 			break
 		}
 	}
@@ -209,7 +209,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 		if end > size {
 			end = size
 		}
-		copy(b[sum:end], tmp[:SIZE_OF_PIECE])
+		copy(b[sum:end], tmp)
 		sum += i
 		if sum >= size {
 			break
