@@ -197,7 +197,15 @@ func SingleRead(conn *net.TCPConn) Msg {
 	b = make([]byte, size)
 	sum := 0
 	for {
-		tmp := make([]byte, SIZE_OF_PIECE)
+
+		tmp_size := 0
+		if size-sum > SIZE_OF_PIECE {
+			tmp_size = SIZE_OF_PIECE
+		} else {
+			tmp_size = size - sum
+		}
+
+		tmp := make([]byte, tmp_size)
 		i, e := conn.Read(tmp)
 		if e != nil && e != io.EOF { // 网络有错,则退出循环
 			fmt.Printf("msg.SingleRead:%v", e)
