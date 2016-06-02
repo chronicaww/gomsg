@@ -189,8 +189,8 @@ func SingleRead(conn *net.TCPConn) Msg {
 	mType := buf.Next(SIZE_OF_TYPE)
 	bufType := bytes.NewBuffer(mType)
 	binary.Read(bufType, binary.LittleEndian, &m.Type)
-	fmt.Println("GetMTypeFin:", m.Type)
 	if m.Type < int32(0) || m.Type >= MAX_MTYPE {
+		fmt.Println("GetMTypeError:", m.Type)
 		m.Type = int32(-1)
 		m.Size = int32(0)
 		return m
