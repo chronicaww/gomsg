@@ -22,6 +22,7 @@ const (
 const (
 	MAX_BUFFER_BIG   = 2147483647
 	SIZE_OF_SIZE_BIG = 8
+	MAX_MTYPE        = 1000000
 )
 
 // 消息的结构
@@ -168,9 +169,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 
 	m := Msg{}
 
-	fmt.Println("StartSingleRead")
 	bHead := make([]byte, SIZE_OF_HEAD)
-	fmt.Println("makebuf:", len(bHead))
 	for { // 循环到读取到内容为止
 		i, e := conn.Read(bHead)
 		if e != nil && e != io.EOF { // 网络有错,则退出循环
@@ -184,22 +183,23 @@ func SingleRead(conn *net.TCPConn) Msg {
 		time.Sleep(50 * time.Microsecond)
 	}
 
-	fmt.Println("StartNewBuf")
 	buf := bytes.NewBuffer(bHead)
 
-	fmt.Println("GetMType")
 	// 消息类型
 	mType := buf.Next(SIZE_OF_TYPE)
 	bufType := bytes.NewBuffer(mType)
 	binary.Read(bufType, binary.LittleEndian, &m.Type)
 	fmt.Println("GetMTypeFin:", m.Type)
+	if m.Type < int32(0) || m.Type >= MAX_MTYPE {
+		m.Type = int32(-1)
+		m.Size = int32(0)
+		return m
+	}
 
 	// 消息大小
-	fmt.Println("GetSize")
 	mSize := buf.Next(SIZE_OF_SIZE)
 	bufSize := bytes.NewBuffer(mSize)
 	binary.Read(bufSize, binary.LittleEndian, &m.Size)
-	fmt.Println("GetSizeFin", m.Size)
 
 	size := int(m.Size) - SIZE_OF_HEAD
 	if size <= 0 {
@@ -216,10 +216,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 			tmpSize = size - sum
 		}
 
-		fmt.Println("tmpSize:", tmpSize)
-
 		tmp := make([]byte, tmpSize)
-		fmt.Println("MaketmpSizeFin")
 		i, e := conn.Read(tmp)
 		if e != nil && e != io.EOF { // 网络有错,则退出循环
 			fmt.Printf("msg.SingleRead:%v", e)
@@ -236,7 +233,6 @@ func SingleRead(conn *net.TCPConn) Msg {
 		}
 		time.Sleep(50 * time.Microsecond)
 	}
-	fmt.Println("GetContFin:", len(bCont))
 	m.Content = bCont
 	return m
 }
