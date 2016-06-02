@@ -160,12 +160,19 @@ func SingleWrite(conn *net.TCPConn, b []byte) []byte {
 }
 
 func SingleRead(conn *net.TCPConn) Msg {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in SingleRead", r)
+		}
+	}()
 
 	m := Msg{}
 
-	b := make([]byte, SIZE_OF_HEAD)
+	fmt.Println("StartSingleRead")
+	bHead := make([]byte, SIZE_OF_HEAD)
+	fmt.Println("makebuf:", len(bHead))
 	for { // 循环到读取到内容为止
-		i, e := conn.Read(b)
+		i, e := conn.Read(bHead)
 		if e != nil && e != io.EOF { // 网络有错,则退出循环
 			fmt.Printf("msg.SingleRead:%v", e)
 			return Msg{}
@@ -177,14 +184,19 @@ func SingleRead(conn *net.TCPConn) Msg {
 		time.Sleep(50 * time.Microsecond)
 	}
 
-	buf := bytes.NewBuffer(b)
+	fmt.Println("StartNewBuf")
+	buf := bytes.NewBuffer(bHead)
 
+	fmt.Println("GetMType")
 	// 消息类型
 	mType := buf.Next(SIZE_OF_TYPE)
+	fmt.Println("GetMTypeFin:", mType)
 	bufType := bytes.NewBuffer(mType)
+	fmt.Println("bufType:", mType)
 	binary.Read(bufType, binary.LittleEndian, &m.Type)
 
 	// 消息大小
+	fmt.Println("GetSize")
 	mSize := buf.Next(SIZE_OF_SIZE)
 	bufSize := bytes.NewBuffer(mSize)
 	binary.Read(bufSize, binary.LittleEndian, &m.Size)
@@ -194,10 +206,9 @@ func SingleRead(conn *net.TCPConn) Msg {
 		return m
 	}
 
-	b = make([]byte, size)
+	bCont := make([]byte, size)
 	sum := 0
 	for {
-
 		tmp_size := 0
 		if size-sum > SIZE_OF_PIECE {
 			tmp_size = SIZE_OF_PIECE
@@ -215,14 +226,14 @@ func SingleRead(conn *net.TCPConn) Msg {
 		if end > size {
 			end = size
 		}
-		copy(b[sum:end], tmp[:i])
+		copy(bCont[sum:end], tmp[:i])
 		sum += i
 		if sum >= size {
 			break
 		}
 		time.Sleep(50 * time.Microsecond)
 	}
-	m.Content = b
+	m.Content = bCont
 	return m
 }
 
