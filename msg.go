@@ -1,4 +1,4 @@
-// package msg 读取连接，解析出消息头，返回消息正文和消息类型
+// 读取连接，解析出消息头，返回消息正文和消息类型
 package msg
 
 import (
@@ -12,12 +12,11 @@ import (
 )
 
 const (
-	MAX_BUFFER      = 1024 // 读取缓存最大
-	SIZE_OF_TYPE    = 4    // sizeof int32
-	SIZE_OF_SIZE    = 4    // sizeof int32
-	SIZE_OF_SESSION = 32
-	SIZE_OF_HEAD    = SIZE_OF_TYPE + SIZE_OF_SIZE + SIZE_OF_SESSION
-	SIZE_OF_PIECE   = 256
+	MAX_BUFFER    = 1024 // 读取缓存最大值
+	SIZE_OF_TYPE  = 4    // sizeof int32
+	SIZE_OF_SIZE  = 4    // sizeof int32
+	SIZE_OF_HEAD  = SIZE_OF_TYPE + SIZE_OF_SIZE
+	SIZE_OF_PIECE = 256
 )
 
 const (
@@ -28,10 +27,9 @@ const (
 
 // 消息的结构
 type Msg struct {
-	Type      int32  // 消息类型
-	Size      int32  // 消息大小（含消息类型和消息大小自身
-	SessionID []byte // 验证session
-	Content   []byte // 消息正文
+	Type    int32  // 消息类型
+	Size    int32  // 消息大小（含消息类型和消息大小自身
+	Content []byte // 消息正文
 }
 
 // 用以存储的消息结构
@@ -98,7 +96,7 @@ func UnPack(b []byte) (Msg, error) {
 // 	return m, nil
 // }
 
-// Pack 打包消息，返回[]byte
+// 打包消息，返回[]byte
 func Pack(mType int32, mContent []byte) []byte {
 	buf := new(bytes.Buffer)
 	// 消息类型
@@ -112,7 +110,6 @@ func Pack(mType int32, mContent []byte) []byte {
 	return b
 }
 
-// MsgRequest 发送消息
 func MsgRequest(addr net.TCPAddr, b []byte) *net.TCPConn {
 	conn, e := net.DialTCP("tcp", nil, &addr)
 	if e != nil {
@@ -127,7 +124,6 @@ func MsgRequest(addr net.TCPAddr, b []byte) *net.TCPConn {
 	return conn
 }
 
-// SingleRequest 请求
 func SingleRequest(addr net.TCPAddr, b []byte) Msg {
 	conn, e := net.DialTCP("tcp", nil, &addr)
 	if e != nil {
@@ -142,8 +138,7 @@ func SingleRequest(addr net.TCPAddr, b []byte) Msg {
 	return m
 }
 
-// SingleWrite 发数据
-func SingleWrite(conn *net.TCPConn, b []byte) {
+func SingleWrite(conn *net.TCPConn, b []byte) []byte {
 	// tmp := make([]byte, SIZE_OF_PIECE)
 	bLen := len(b)
 	buf := bytes.NewBuffer(b)
@@ -161,9 +156,10 @@ func SingleWrite(conn *net.TCPConn, b []byte) {
 		}
 		time.Sleep(50 * time.Microsecond)
 	}
+
+	return b
 }
 
-// SingleRead 读数据
 func SingleRead(conn *net.TCPConn) Msg {
 	defer func() {
 		if r := recover(); r != nil {
@@ -241,7 +237,6 @@ func SingleRead(conn *net.TCPConn) Msg {
 	return m
 }
 
-// CopyBytes 拷贝数据
 func CopyBytes(a, b []byte) []byte {
 	n := len(a)
 	result := make([]byte, n+len(b))
@@ -250,7 +245,6 @@ func CopyBytes(a, b []byte) []byte {
 	return result
 }
 
-// PackMsgBig 打包（大
 func PackMsgBig(mContent []byte) []byte {
 	buf := new(bytes.Buffer)
 	// 消息大小
@@ -262,7 +256,6 @@ func PackMsgBig(mContent []byte) []byte {
 	return b
 }
 
-// UnpackMsgBig 解包（大
 func UnpackMsgBig(b []byte) (MsgBig, error) {
 	m := MsgBig{}
 	buf := bytes.NewBuffer(b)
