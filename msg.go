@@ -161,6 +161,11 @@ func SingleWrite(conn *net.TCPConn, b []byte) []byte {
 }
 
 func SingleRead(conn *net.TCPConn) Msg {
+	m, _ := SingleReadN(conn)
+	return m
+}
+
+func SingleReadN(conn *net.TCPConn) (Msg, error) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("Recovered in SingleRead", r)
@@ -174,7 +179,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 		i, e := conn.Read(bHead)
 		if e != nil && e != io.EOF { // 网络有错,则退出循环
 			fmt.Printf("msg.SingleRead:%v", e)
-			return Msg{}
+			return Msg{}, e
 		}
 
 		if i > 0 { // 读到内容则退出读取循环
@@ -193,7 +198,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 		fmt.Println("GetMTypeError:", m.Type)
 		m.Type = int32(-1)
 		m.Size = int32(0)
-		return m
+		return m, errors.New("GetMTypeError")
 	}
 
 	// 消息大小
@@ -203,7 +208,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 
 	size := int(m.Size) - SIZE_OF_HEAD
 	if size <= 0 {
-		return m
+		return m, nil
 	}
 
 	bCont := make([]byte, size)
@@ -220,7 +225,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 		i, e := conn.Read(tmp)
 		if e != nil && e != io.EOF { // 网络有错,则退出循环
 			fmt.Printf("msg.SingleRead:%v", e)
-			return Msg{}
+			return Msg{}, e
 		}
 		end := sum + i
 		if end > size {
@@ -234,7 +239,7 @@ func SingleRead(conn *net.TCPConn) Msg {
 		time.Sleep(50 * time.Microsecond)
 	}
 	m.Content = bCont
-	return m
+	return m, nil
 }
 
 func CopyBytes(a, b []byte) []byte {
